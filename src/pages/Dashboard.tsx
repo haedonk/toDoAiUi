@@ -63,8 +63,8 @@ const Dashboard: React.FC = () => {
     
     const matchesStatus = 
       filterStatus === 'all' ||
-      (filterStatus === 'active' && !todo.isCompleted) ||
-      (filterStatus === 'completed' && todo.isCompleted);
+      (filterStatus === 'active' && !todo.completed) ||
+      (filterStatus === 'completed' && todo.completed);
     
     const matchesPriority = filterPriority === 'all' || todo.priority === filterPriority;
 
@@ -192,7 +192,7 @@ const Dashboard: React.FC = () => {
                   My Todos
                 </h1>
                 <p className="text-gray-600 dark:text-gray-400 mt-1">
-                  {todos.length} total, {todos.filter(t => !t.isCompleted).length} active
+                  {todos.length} total, {todos.filter(t => !t.completed).length} active
                 </p>
               </div>
               <button

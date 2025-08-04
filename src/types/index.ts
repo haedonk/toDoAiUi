@@ -60,7 +60,7 @@ export interface PrioritizeResponse {
   id: number;
   title: string;
   priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
-  isCompleted: boolean;
+  completed: boolean;
 }
 
 export interface SuggestResponse {
