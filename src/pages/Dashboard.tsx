@@ -14,7 +14,7 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
-import { Plus, Filter, Search } from 'lucide-react';
+import { Plus, Filter, Search, ChevronDown, ChevronUp, List, LayoutGrid } from 'lucide-react';
 
 import Navbar from '../components/Navbar';
 import TodoItem from '../components/TodoItem';
@@ -42,6 +42,8 @@ const Dashboard: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'completed'>('all');
   const [filterPriority, setFilterPriority] = useState<'all' | 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT'>('all');
+  const [isFiltersExpanded, setIsFiltersExpanded] = useState(false);
+  const [isCompactView, setIsCompactView] = useState(false);
   const [darkMode, setDarkMode] = useState(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('darkMode') === 'true';
@@ -164,7 +166,7 @@ const Dashboard: React.FC = () => {
   if (error) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        <Navbar darkMode={darkMode} toggleDarkMode={toggleDarkMode} />
+        <Navbar darkMode={darkMode} toggleDarkMode={toggleDarkMode} compact={isCompactView} />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center">
             <h2 className="text-xl font-semibold text-red-600 dark:text-red-400 mb-2">
@@ -179,76 +181,153 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
-      <Navbar darkMode={darkMode} toggleDarkMode={toggleDarkMode} />
-      
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <Navbar darkMode={darkMode} toggleDarkMode={toggleDarkMode} compact={isCompactView} />
+
+      <div className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-${isCompactView ? "2" : "8"}`}>
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-3">
             {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+            <div className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-${isCompactView ? "2" : "8"}`}>
               <div>
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+                <h1 className={`text-${isCompactView ? "2" : "3"}xl font-bold text-gray-900 dark:text-white`}>
                   My Todos
                 </h1>
                 <p className="text-gray-600 dark:text-gray-400 mt-1">
                   {todos.length} total, {todos.filter(t => !t.completed).length} active
                 </p>
               </div>
-              <button
-                onClick={() => {
-                  setEditingTodo(null);
-                  setIsFormOpen(true);
-                }}
-                className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors font-medium"
-              >
-                <Plus className="h-5 w-5" />
-                Add Todo
-              </button>
+              <div className="flex items-center gap-3">
+                {/* Compact View Toggle */}
+                <button
+                  onClick={() => setIsCompactView(!isCompactView)}
+                  className={`p-2 rounded-lg border transition-colors ${
+                    isCompactView
+                      ? 'bg-indigo-50 border-indigo-200 text-indigo-600 dark:bg-indigo-900/20 dark:border-indigo-800 dark:text-indigo-400'
+                      : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700'
+                  }`}
+                  title={isCompactView ? 'Switch to detailed view' : 'Switch to compact view'}
+                >
+                  {isCompactView ? (
+                    <LayoutGrid className="h-5 w-5" />
+                  ) : (
+                    <List className="h-5 w-5" />
+                  )}
+                </button>
+                
+                <button
+                  onClick={() => {
+                    setEditingTodo(null);
+                    setIsFormOpen(true);
+                  }}
+                  className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors font-medium"
+                >
+                  <Plus className="h-5 w-5" />
+                  Add Todo
+                </button>
+              </div>
             </div>
 
             {/* Search and Filters */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {/* Search */}
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                  <input
-                    type="text"
-                    placeholder="Search todos..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white transition-colors"
-                  />
-                </div>
-
-                {/* Status Filter */}
-                <div className="relative">
-                  <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                  <select
-                    value={filterStatus}
-                    onChange={(e) => setFilterStatus(e.target.value as 'all' | 'active' | 'completed')}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white transition-colors appearance-none"
+            <div className={`bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 mb-${isCompactView ? "2" : "6"}`}>
+              {/* Search bar with filter toggle (mobile) */}
+              <div className="p-4 border-b border-gray-200 dark:border-gray-700 md:border-b-0">
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                    <input
+                      type="text"
+                      placeholder="Search todos..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white transition-colors"
+                    />
+                  </div>
+                  {/* Filter toggle button (mobile only) */}
+                  <button
+                    onClick={() => setIsFiltersExpanded(!isFiltersExpanded)}
+                    className="md:hidden flex items-center gap-2 px-3 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border border-gray-300 dark:border-gray-600 rounded-lg"
                   >
-                    <option value="all">All Status</option>
-                    <option value="active">Active</option>
-                    <option value="completed">Completed</option>
-                  </select>
+                    <Filter className="h-5 w-5" />
+                    {(filterStatus !== 'all' || filterPriority !== 'all') && (
+                      <span className="bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200 text-xs px-2 py-1 rounded-full">
+                        Active
+                      </span>
+                    )}
+                    {isFiltersExpanded ? (
+                      <ChevronUp className="h-4 w-4" />
+                    ) : (
+                      <ChevronDown className="h-4 w-4" />
+                    )}
+                  </button>
                 </div>
+              </div>
 
-                {/* Priority Filter */}
-                <div>
-                  <select
-                    value={filterPriority}
-                    onChange={(e) => setFilterPriority(e.target.value as 'all' | 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT')}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white transition-colors appearance-none"
-                  >
-                    <option value="all">All Priorities</option>
-                    <option value="URGENT">Urgent Priority</option>
-                    <option value="HIGH">High Priority</option>
-                    <option value="MEDIUM">Medium Priority</option>
-                    <option value="LOW">Low Priority</option>
-                  </select>
+              {/* Collapsible filters (mobile) */}
+              <div className={`md:hidden ${isFiltersExpanded ? 'block' : 'hidden'} border-t border-gray-200 dark:border-gray-700`}>
+                <div className="p-4 space-y-4">
+                  {/* Status Filter */}
+                  <div className="relative">
+                    <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                    <select
+                      value={filterStatus}
+                      onChange={(e) => setFilterStatus(e.target.value as 'all' | 'active' | 'completed')}
+                      className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white transition-colors appearance-none"
+                    >
+                      <option value="all">All Status</option>
+                      <option value="active">Active</option>
+                      <option value="completed">Completed</option>
+                    </select>
+                  </div>
+
+                  {/* Priority Filter */}
+                  <div>
+                    <select
+                      value={filterPriority}
+                      onChange={(e) => setFilterPriority(e.target.value as 'all' | 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT')}
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white transition-colors appearance-none"
+                    >
+                      <option value="all">All Priorities</option>
+                      <option value="URGENT">Urgent Priority</option>
+                      <option value="HIGH">High Priority</option>
+                      <option value="MEDIUM">Medium Priority</option>
+                      <option value="LOW">Low Priority</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Always visible filters (desktop) */}
+              <div className="hidden md:block p-4 border-t border-gray-200 dark:border-gray-700">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Status Filter */}
+                  <div className="relative">
+                    <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                    <select
+                      value={filterStatus}
+                      onChange={(e) => setFilterStatus(e.target.value as 'all' | 'active' | 'completed')}
+                      className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white transition-colors appearance-none"
+                    >
+                      <option value="all">All Status</option>
+                      <option value="active">Active</option>
+                      <option value="completed">Completed</option>
+                    </select>
+                  </div>
+
+                  {/* Priority Filter */}
+                  <div>
+                    <select
+                      value={filterPriority}
+                      onChange={(e) => setFilterPriority(e.target.value as 'all' | 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT')}
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white transition-colors appearance-none"
+                    >
+                      <option value="all">All Priorities</option>
+                      <option value="URGENT">Urgent Priority</option>
+                      <option value="HIGH">High Priority</option>
+                      <option value="MEDIUM">Medium Priority</option>
+                      <option value="LOW">Low Priority</option>
+                    </select>
+                  </div>
                 </div>
               </div>
             </div>
@@ -297,7 +376,7 @@ const Dashboard: React.FC = () => {
                   items={filteredTodos.map(todo => todo.id)}
                   strategy={verticalListSortingStrategy}
                 >
-                  <div className="space-y-4">
+                  <div className={isCompactView ? "space-y-1" : "space-y-4"}>
                     {filteredTodos.map((todo) => (
                       <TodoItem
                         key={todo.id}
@@ -305,6 +384,7 @@ const Dashboard: React.FC = () => {
                         onToggleComplete={toggleComplete}
                         onEdit={handleEditTodo}
                         onDelete={handleDeleteTodo}
+                        compact={isCompactView}
                       />
                     ))}
                   </div>

@@ -17,7 +17,8 @@ interface AIPanelProps {
   onAddSuggestion: (suggestion: AIsuggestion) => void;
 }
 
-const AIPanel: React.FC<AIPanelProps> = ({ todos, onTodosUpdate, onAddSuggestion }) => {
+const AIPanel: React.FC<AIPanelProps> = ({ todos, 
+  onTodosUpdate, onAddSuggestion }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [suggestions, setSuggestions] = useState<AIsuggestion[]>([]);
 
@@ -31,6 +32,7 @@ const AIPanel: React.FC<AIPanelProps> = ({ todos, onTodosUpdate, onAddSuggestion
     try {
       const prioritizedTodos = await aiAPI.prioritizeTodos();
       // Update the existing todos with the new priority order from AI
+      console.log(prioritizedTodos);
       if (prioritizedTodos.length > 0) {
         const updatedTodos = todos.map(todo => {
           const prioritized = prioritizedTodos.find(p => p.id === todo.id);

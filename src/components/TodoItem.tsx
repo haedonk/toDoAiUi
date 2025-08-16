@@ -18,13 +18,15 @@ interface TodoItemProps {
   onToggleComplete: (id: number) => void;
   onEdit: (todo: Todo) => void;
   onDelete: (id: number) => void;
+  compact?: boolean;
 }
 
 const TodoItem: React.FC<TodoItemProps> = ({ 
   todo, 
   onToggleComplete, 
   onEdit, 
-  onDelete 
+  onDelete,
+  compact = false
 }) => {
   const [isDeleting, setIsDeleting] = useState(false);
   const overdue = isOverdue(todo.dueDate) && !todo.completed;
@@ -52,6 +54,103 @@ const TodoItem: React.FC<TodoItemProps> = ({
     }
   };
 
+  if (compact) {
+    // Compact view
+    return (
+      <div
+        ref={setNodeRef}
+        style={style}
+        className={`bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 px-3 py-2 transition-all duration-200 hover:shadow-md ${
+          isDragging ? 'opacity-50 scale-95' : ''
+        } ${todo.completed ? 'opacity-75' : ''}`}
+      >
+        <div className="flex items-center gap-2">
+          {/* Drag Handle */}
+          <button
+            {...attributes}
+            {...listeners}
+            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-grab active:cursor-grabbing"
+          >
+            <GripVertical className="h-4 w-4" />
+          </button>
+
+          {/* Complete Checkbox */}
+          <button
+            onClick={() => onToggleComplete(todo.id)}
+            className={`flex-shrink-0 w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all ${
+              todo.completed
+                ? 'bg-green-500 border-green-500 text-white'
+                : 'border-gray-300 dark:border-gray-600 hover:border-green-500'
+            }`}
+          >
+            {todo.completed && <Check className="h-2.5 w-2.5" />}
+          </button>
+
+          {/* Title */}
+          <h3
+            className={`flex-1 text-sm font-medium text-gray-900 dark:text-white transition-all truncate ${
+              todo.completed ? 'line-through text-gray-500 dark:text-gray-400' : ''
+            }`}
+          >
+            {todo.title}
+          </h3>
+
+          {/* Priority Badge */}
+          <span
+            className={`px-2 py-0.5 rounded-full text-xs font-medium ${getPriorityColor(
+              todo.priority
+            )}`}
+          >
+            {todo.priority}
+          </span>
+
+          {/* Due Date */}
+          <div className={`flex items-center gap-1 text-xs ${
+            overdue 
+              ? 'text-red-600 dark:text-red-400' 
+              : todo.completed 
+              ? 'text-green-600 dark:text-green-400'
+              : 'text-gray-500 dark:text-gray-400'
+          }`}>
+            {overdue ? (
+              <AlertCircle className="h-3 w-3" />
+            ) : todo.completed ? (
+              <Check className="h-3 w-3" />
+            ) : (
+              <Calendar className="h-3 w-3" />
+            )}
+            <span>{formatDate(todo.dueDate)}</span>
+          </div>
+
+          {/* Actions */}
+          <div className="flex items-center gap-0.5">
+            <button
+              onClick={() => onEdit(todo)}
+              className="p-1 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors rounded hover:bg-gray-100 dark:hover:bg-gray-700"
+              title="Edit todo"
+            >
+              <Edit className="h-3 w-3" />
+            </button>
+            
+            <button
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className="p-1 text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors rounded hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50"
+              title="Delete todo"
+            >
+              {isDeleting ? (
+                <div className="animate-spin rounded-full h-3 w-3 border-b border-red-500"></div>
+              ) : (
+                <Trash2 className="h-3 w-3" />
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Default detailed view
   return (
     <div
       ref={setNodeRef}
