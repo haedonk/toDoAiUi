@@ -13,6 +13,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
@@ -40,7 +41,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         try {
           // Use stored user data (token validation happens on API calls)
           setUser(JSON.parse(storedUser));
-        } catch (error) {
+        } catch (storageError) {
+          console.error('Failed to restore stored user session', storageError);
           // Invalid stored data, clear storage
           localStorage.removeItem('authToken');
           localStorage.removeItem('user');
