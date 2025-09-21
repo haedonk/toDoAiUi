@@ -1,15 +1,16 @@
+
 import React, { useState } from 'react';
-import { 
-  Bot, 
-  Sparkles, 
-  Lightbulb, 
-  ArrowRight, 
+import {
+  Bot,
+  Sparkles,
+  Lightbulb,
+  ArrowRight,
   Plus,
-  Brain
+  Brain,
 } from 'lucide-react';
 import type { Todo, AIsuggestion } from '../types';
 import { aiAPI } from '../services/api';
-import { showToast, getPriorityColor } from '../utils';
+import { cn, getPriorityColor, showToast } from '../utils';
 
 interface AIPanelProps {
   todos: Todo[];
@@ -17,8 +18,7 @@ interface AIPanelProps {
   onAddSuggestion: (suggestion: AIsuggestion) => void;
 }
 
-const AIPanel: React.FC<AIPanelProps> = ({ todos, 
-  onTodosUpdate, onAddSuggestion }) => {
+const AIPanel: React.FC<AIPanelProps> = ({ todos, onTodosUpdate, onAddSuggestion }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [suggestions, setSuggestions] = useState<AIsuggestion[]>([]);
 
@@ -31,11 +31,9 @@ const AIPanel: React.FC<AIPanelProps> = ({ todos,
     setIsProcessing(true);
     try {
       const prioritizedTodos = await aiAPI.prioritizeTodos();
-      // Update the existing todos with the new priority order from AI
-      console.log(prioritizedTodos);
       if (prioritizedTodos.length > 0) {
-        const updatedTodos = todos.map(todo => {
-          const prioritized = prioritizedTodos.find(p => p.id === todo.id);
+        const updatedTodos = todos.map((todo) => {
+          const prioritized = prioritizedTodos.find((p) => p.id === todo.id);
           return prioritized ? { ...todo, priority: prioritized.priority } : todo;
         });
         onTodosUpdate(updatedTodos);
@@ -44,10 +42,7 @@ const AIPanel: React.FC<AIPanelProps> = ({ todos,
         showToast('No priority updates available', 'info');
       }
     } catch (error) {
-      showToast(
-        error instanceof Error ? error.message : 'Failed to prioritize todos',
-        'error'
-      );
+      showToast(error instanceof Error ? error.message : 'Failed to prioritize todos', 'error');
     } finally {
       setIsProcessing(false);
     }
@@ -60,10 +55,7 @@ const AIPanel: React.FC<AIPanelProps> = ({ todos,
       setSuggestions(suggestionsResponse);
       showToast('AI suggestions generated!', 'success');
     } catch (error) {
-      showToast(
-        error instanceof Error ? error.message : 'Failed to generate suggestions',
-        'error'
-      );
+      showToast(error instanceof Error ? error.message : 'Failed to generate suggestions', 'error');
     } finally {
       setIsProcessing(false);
     }
@@ -71,133 +63,129 @@ const AIPanel: React.FC<AIPanelProps> = ({ todos,
 
   const handleAddSuggestionToTodos = (suggestion: AIsuggestion) => {
     onAddSuggestion(suggestion);
-    setSuggestions(prev => prev.filter(s => s.id !== suggestion.id));
+    setSuggestions((prev) => prev.filter((s) => s.id !== suggestion.id));
     showToast('Suggestion added to your todos!', 'success');
   };
 
+  const actionButtonBase = cn(
+    'tap-target flex w-full items-center justify-between rounded-xl border px-4 py-3 text-left text-sm font-semibold transition-colors',
+    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900',
+    'disabled:cursor-not-allowed disabled:opacity-60'
+  );
+
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-      {/* Header */}
-      <div className="flex items-center gap-3 mb-6">
-        <div className="bg-gradient-to-r from-purple-500 to-indigo-600 p-2 rounded-lg">
-          <Bot className="h-6 w-6 text-white" />
+    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 sm:p-5 lg:p-6">
+      <div className="flex items-center gap-3 border-b border-slate-200 pb-4 dark:border-slate-700">
+        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 text-white">
+          <Bot className="h-5 w-5" />
         </div>
-        <div>
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-            AI Assistant
-          </h2>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            Smart productivity features
-          </p>
+        <div className="min-w-0">
+          <h2 className="text-lg font-semibold text-slate-900 dark:text-white">AI assistant</h2>
+          <p className="text-sm text-slate-500 dark:text-slate-300">Smart productivity features</p>
         </div>
       </div>
 
-      {/* AI Actions */}
-      <div className="space-y-4 mb-6">
-        {/* Prioritize Todos */}
+      <div className="space-y-4 pt-4">
         <button
+          type="button"
           onClick={handlePrioritizeTodos}
           disabled={isProcessing || todos.length === 0}
-          className="w-full flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200 dark:border-blue-700 rounded-lg hover:from-blue-100 hover:to-indigo-100 dark:hover:from-blue-900/30 dark:hover:to-indigo-900/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          className={cn(
+            actionButtonBase,
+            'border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50 text-slate-900 hover:from-blue-100 hover:to-indigo-100',
+            'dark:border-blue-700 dark:from-blue-900/20 dark:to-indigo-900/20 dark:text-slate-100 dark:hover:from-blue-900/30 dark:hover:to-indigo-900/30'
+          )}
         >
           <div className="flex items-center gap-3">
-            <div className="bg-blue-500 p-2 rounded-lg">
-              <Brain className="h-5 w-5 text-white" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-500 text-white">
+              <Brain className="h-5 w-5" />
             </div>
-            <div className="text-left">
-              <h3 className="font-medium text-gray-900 dark:text-white">
-                Prioritize Todos
-              </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                AI will reorder your tasks
-              </p>
+            <div className="min-w-0 text-left">
+              <h3 className="text-sm font-semibold text-slate-900 dark:text-white">Prioritize todos</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-300">AI will reorder your tasks</p>
             </div>
           </div>
           {isProcessing ? (
-            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500"></div>
+            <span className="h-5 w-5 animate-spin rounded-full border-2 border-indigo-500 border-b-transparent" />
           ) : (
-            <ArrowRight className="h-5 w-5 text-gray-400" />
+            <ArrowRight className="h-5 w-5 text-slate-400" />
           )}
         </button>
 
-        {/* Generate Suggestions */}
         <button
+          type="button"
           onClick={handleGenerateSuggestions}
           disabled={isProcessing}
-          className="w-full flex items-center justify-between p-4 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border border-purple-200 dark:border-purple-700 rounded-lg hover:from-purple-100 hover:to-pink-100 dark:hover:from-purple-900/30 dark:hover:to-pink-900/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          className={cn(
+            actionButtonBase,
+            'border-purple-200 bg-gradient-to-r from-purple-50 to-pink-50 text-slate-900 hover:from-purple-100 hover:to-pink-100',
+            'dark:border-purple-700 dark:from-purple-900/20 dark:to-pink-900/20 dark:text-slate-100 dark:hover:from-purple-900/30 dark:hover:to-pink-900/30'
+          )}
         >
           <div className="flex items-center gap-3">
-            <div className="bg-purple-500 p-2 rounded-lg">
-              <Lightbulb className="h-5 w-5 text-white" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-500 text-white">
+              <Lightbulb className="h-5 w-5" />
             </div>
-            <div className="text-left">
-              <h3 className="font-medium text-gray-900 dark:text-white">
-                Generate Suggestions
-              </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Get AI-powered task ideas
-              </p>
+            <div className="min-w-0 text-left">
+              <h3 className="text-sm font-semibold text-slate-900 dark:text-white">Generate suggestions</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-300">Get AI-powered task ideas</p>
             </div>
           </div>
           {isProcessing ? (
-            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-purple-500"></div>
+            <span className="h-5 w-5 animate-spin rounded-full border-2 border-purple-500 border-b-transparent" />
           ) : (
-            <Sparkles className="h-5 w-5 text-gray-400" />
+            <Sparkles className="h-5 w-5 text-slate-400" />
           )}
         </button>
       </div>
 
-      {/* Suggestions */}
-      {suggestions.length > 0 && (
-        <div>
-          <h3 className="font-medium text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+      {suggestions.length > 0 ? (
+        <div className="mt-6 space-y-4">
+          <h3 className="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-white">
             <Lightbulb className="h-4 w-4" />
-            AI Suggestions
+            AI suggestions
           </h3>
-          <div className="space-y-3 max-h-80 overflow-y-auto">
+          <div className="space-y-3 overflow-y-auto rounded-xl border border-slate-200 p-3 dark:border-slate-700">
             {suggestions.map((suggestion) => (
               <div
                 key={suggestion.id}
-                className="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600"
+                className="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800"
               >
-                <div className="flex items-start justify-between gap-2 mb-2">
-                  <h4 className="font-medium text-gray-900 dark:text-white text-sm">
+                <div className="flex items-start justify-between gap-3">
+                  <h4 className="text-sm font-semibold text-slate-900 dark:text-white break-words">
                     {suggestion.suggestedTask}
                   </h4>
                   <span
-                    className={`px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(
-                      suggestion.priority
-                    )}`}
+                    className={cn(
+                      'rounded-full px-2 py-0.5 text-xs font-medium',
+                      getPriorityColor(suggestion.priority)
+                    )}
                   >
                     {suggestion.priority}
                   </span>
                 </div>
-                
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-                  Created: {new Date(suggestion.createdAt).toLocaleDateString()}
+                <p className="mt-2 text-xs text-slate-500 dark:text-slate-300">
+                  Created {new Date(suggestion.createdAt).toLocaleDateString()}
                 </p>
-
                 <button
+                  type="button"
                   onClick={() => handleAddSuggestionToTodos(suggestion)}
-                  className="w-full flex items-center justify-center gap-2 py-2 px-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm font-medium"
+                  className="mt-3 tap-target w-full justify-center gap-2 rounded-lg bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-indigo-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900"
                 >
                   <Plus className="h-4 w-4" />
-                  Add to Todos
+                  <span>Add to todos</span>
                 </button>
               </div>
             ))}
           </div>
         </div>
-      )}
-
-      {/* Empty State */}
-      {suggestions.length === 0 && (
-        <div className="text-center py-8">
-          <div className="bg-gray-100 dark:bg-gray-700 p-4 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-            <Bot className="h-8 w-8 text-gray-400" />
+      ) : (
+        <div className="mt-8 flex flex-col items-center gap-4 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center dark:border-slate-700 dark:bg-slate-800/60">
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-700">
+            <Bot className="h-8 w-8 text-slate-500 dark:text-slate-300" />
           </div>
-          <p className="text-gray-500 dark:text-gray-400 text-sm">
-            Use AI features to boost your productivity!
+          <p className="text-sm text-slate-500 dark:text-slate-300">
+            Use AI features to boost your productivity.
           </p>
         </div>
       )}

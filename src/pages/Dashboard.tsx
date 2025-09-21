@@ -21,7 +21,7 @@ import TodoItem from '../components/TodoItem';
 import TodoForm from '../components/TodoForm';
 import AIPanel from '../components/AIPanel';
 import useTodos from '../hooks/useTodos';
-import { showToast } from '../utils';
+import { cn, showToast } from '../utils';
 import type { Todo, CreateTodoRequest, UpdateTodoRequest, AIsuggestion } from '../types';
 
 const Dashboard: React.FC = () => {
@@ -62,16 +62,19 @@ const Dashboard: React.FC = () => {
   const filteredTodos = todos.filter((todo) => {
     const matchesSearch = todo.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          todo.description.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesStatus = 
+
+    const matchesStatus =
       filterStatus === 'all' ||
       (filterStatus === 'active' && !todo.completed) ||
       (filterStatus === 'completed' && todo.completed);
-    
+
     const matchesPriority = filterPriority === 'all' || todo.priority === filterPriority;
 
     return matchesSearch && matchesStatus && matchesPriority;
   });
+
+  const activeTodos = todos.filter((todo) => !todo.completed).length;
+  const hasActiveFilters = filterStatus !== 'all' || filterPriority !== 'all';
 
   const toggleDarkMode = () => {
     const newDarkMode = !darkMode;
@@ -142,7 +145,7 @@ const Dashboard: React.FC = () => {
     try {
       await deleteTodo(id);
       showToast('Todo deleted successfully!', 'success');
-    } catch (error) {
+    } catch {
       showToast('Failed to delete todo', 'error');
     }
   };
@@ -158,225 +161,225 @@ const Dashboard: React.FC = () => {
     handleCreateTodo(todoData);
   };
 
+
   const closeForm = () => {
     setIsFormOpen(false);
     setEditingTodo(null);
   };
 
+  const containerPadding = isCompactView ? 'py-4 sm:py-6 lg:py-8' : 'py-6 sm:py-8 lg:py-10';
+  const headerSpacing = isCompactView ? 'mb-4 sm:mb-6' : 'mb-6 sm:mb-8';
+  const filtersSpacing = isCompactView ? 'mb-4 sm:mb-6' : 'mb-6 sm:mb-8';
+  const listSpacing = isCompactView ? 'space-y-2 sm:space-y-3' : 'space-y-4';
+  const skeletonSpacing = isCompactView ? 'space-y-3' : 'space-y-4';
+  const selectBaseClasses = `w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-700 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white appearance-none`;
+
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="min-h-screen bg-slate-100 dark:bg-slate-950">
         <Navbar darkMode={darkMode} toggleDarkMode={toggleDarkMode} compact={isCompactView} />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="text-center">
-            <h2 className="text-xl font-semibold text-red-600 dark:text-red-400 mb-2">
-              Error Loading Todos
-            </h2>
-            <p className="text-gray-600 dark:text-gray-400">{error}</p>
+        <main className="mx-auto flex w-full max-w-6xl flex-col items-center px-4 py-12 sm:px-6 lg:px-8">
+          <div className="w-full max-w-xl rounded-2xl border border-red-200 bg-white p-6 text-center shadow-sm dark:border-red-700/60 dark:bg-slate-900">
+            <h2 className="text-xl font-semibold text-red-600 dark:text-red-400">Error loading todos</h2>
+            <p className="mt-3 text-sm leading-relaxed text-slate-600 dark:text-slate-300">{error}</p>
           </div>
-        </div>
+        </main>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
+    <div className="min-h-screen bg-slate-100 transition-colors dark:bg-slate-950">
       <Navbar darkMode={darkMode} toggleDarkMode={toggleDarkMode} compact={isCompactView} />
 
-      <div className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-${isCompactView ? "2" : "8"}`}>
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* Main Content */}
-          <div className="lg:col-span-3">
-            {/* Header */}
-            <div className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-${isCompactView ? "2" : "8"}`}>
-              <div>
-                <h1 className={`text-${isCompactView ? "2" : "3"}xl font-bold text-gray-900 dark:text-white`}>
-                  My Todos
+      <main className={cn('mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8', containerPadding)}>
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,1fr)] lg:gap-8">
+          <section id="todo-list">
+            <header className={cn('flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between', headerSpacing)}>
+              <div className="min-w-0">
+                <h1 className="text-3xl font-bold text-slate-900 dark:text-white sm:text-[calc(var(--font-size-lg)+0.35rem)]">
+                  My todos
                 </h1>
-                <p className="text-gray-600 dark:text-gray-400 mt-1">
-                  {todos.length} total, {todos.filter(t => !t.completed).length} active
+                <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
+                  {todos.length} total · {activeTodos} active
                 </p>
               </div>
-              <div className="flex items-center gap-3">
-                {/* Compact View Toggle */}
+              <div className="flex flex-wrap items-center gap-3 sm:justify-end">
                 <button
+                  type="button"
                   onClick={() => setIsCompactView(!isCompactView)}
-                  className={`p-2 rounded-lg border transition-colors ${
+                  aria-pressed={isCompactView}
+                  className={cn(
+                    'tap-target gap-2 rounded-lg border text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900',
                     isCompactView
-                      ? 'bg-indigo-50 border-indigo-200 text-indigo-600 dark:bg-indigo-900/20 dark:border-indigo-800 dark:text-indigo-400'
-                      : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700'
-                  }`}
+                      ? 'border-indigo-200 bg-indigo-50 text-indigo-600 dark:border-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-200'
+                      : 'border-slate-200 bg-white text-slate-600 hover:border-indigo-200 hover:bg-indigo-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-indigo-600 dark:hover:bg-indigo-900/40'
+                  )}
                   title={isCompactView ? 'Switch to detailed view' : 'Switch to compact view'}
                 >
-                  {isCompactView ? (
-                    <LayoutGrid className="h-5 w-5" />
-                  ) : (
-                    <List className="h-5 w-5" />
-                  )}
+                  {isCompactView ? <LayoutGrid className="h-5 w-5" /> : <List className="h-5 w-5" />}
+                  <span className="sr-only">
+                    {isCompactView ? 'Switch to detailed view' : 'Switch to compact view'}
+                  </span>
                 </button>
-                
+
                 <button
+                  type="button"
                   onClick={() => {
                     setEditingTodo(null);
                     setIsFormOpen(true);
                   }}
-                  className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors font-medium"
+                  className="tap-target gap-2 rounded-lg bg-indigo-600 px-4 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-indigo-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900"
                 >
                   <Plus className="h-5 w-5" />
-                  Add Todo
+                  <span>Add todo</span>
                 </button>
               </div>
-            </div>
+            </header>
 
-            {/* Search and Filters */}
-            <div className={`bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 mb-${isCompactView ? "2" : "6"}`}>
-              {/* Search bar with filter toggle (mobile) */}
-              <div className="p-4 border-b border-gray-200 dark:border-gray-700 md:border-b-0">
-                <div className="flex gap-2">
-                  <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                    <input
-                      type="text"
-                      placeholder="Search todos..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white transition-colors"
-                    />
+            <div
+              className={cn(
+                'rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900',
+                filtersSpacing
+              )}
+            >
+              <div className="flex gap-2 border-b border-slate-200 p-4 dark:border-slate-700 md:border-b-0">
+                <div className="relative flex-1">
+                  <Search className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="text"
+                    placeholder="Search todos"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full rounded-lg border border-slate-200 bg-white py-2.5 pl-10 pr-3 text-sm text-slate-900 shadow-sm transition focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsFiltersExpanded(!isFiltersExpanded)}
+                  className="tap-target md:hidden shrink-0 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 transition-colors hover:border-indigo-200 hover:bg-indigo-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-indigo-600 dark:hover:bg-indigo-900/40 dark:focus-visible:ring-offset-slate-900"
+                  aria-expanded={isFiltersExpanded}
+                  aria-controls="mobile-filters"
+                >
+                  <Filter className="h-5 w-5" />
+                  {hasActiveFilters && (
+                    <span className="rounded-full bg-indigo-100 px-2 py-1 text-xs font-semibold text-indigo-700 dark:bg-indigo-900/60 dark:text-indigo-200">
+                      Active
+                    </span>
+                  )}
+                  {isFiltersExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                </button>
+              </div>
+
+              <div
+                id="mobile-filters"
+                className={cn(
+                  'md:hidden border-t border-slate-200 dark:border-slate-700',
+                  isFiltersExpanded ? 'block' : 'hidden'
+                )}
+              >
+                <div className="grid gap-4 p-4">
+                  <div className="relative">
+                    <Filter className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+                    <select
+                      value={filterStatus}
+                      onChange={(e) => setFilterStatus(e.target.value as 'all' | 'active' | 'completed')}
+                      className={cn(selectBaseClasses, 'pl-10')}
+                    >
+                      <option value="all">All status</option>
+                      <option value="active">Active</option>
+                      <option value="completed">Completed</option>
+                    </select>
                   </div>
-                  {/* Filter toggle button (mobile only) */}
-                  <button
-                    onClick={() => setIsFiltersExpanded(!isFiltersExpanded)}
-                    className="md:hidden flex items-center gap-2 px-3 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border border-gray-300 dark:border-gray-600 rounded-lg"
+
+                  <div>
+                    <select
+                      value={filterPriority}
+                      onChange={(e) => setFilterPriority(e.target.value as 'all' | 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT')}
+                      className={selectBaseClasses}
+                    >
+                      <option value="all">All priorities</option>
+                      <option value="URGENT">Urgent priority</option>
+                      <option value="HIGH">High priority</option>
+                      <option value="MEDIUM">Medium priority</option>
+                      <option value="LOW">Low priority</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div className="hidden md:grid md:grid-cols-2 md:gap-4 md:border-t md:border-slate-200 md:p-4 lg:p-5 dark:md:border-slate-700">
+                <div className="relative">
+                  <Filter className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+                  <select
+                    value={filterStatus}
+                    onChange={(e) => setFilterStatus(e.target.value as 'all' | 'active' | 'completed')}
+                    className={cn(selectBaseClasses, 'pl-10')}
                   >
-                    <Filter className="h-5 w-5" />
-                    {(filterStatus !== 'all' || filterPriority !== 'all') && (
-                      <span className="bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200 text-xs px-2 py-1 rounded-full">
-                        Active
-                      </span>
-                    )}
-                    {isFiltersExpanded ? (
-                      <ChevronUp className="h-4 w-4" />
-                    ) : (
-                      <ChevronDown className="h-4 w-4" />
-                    )}
-                  </button>
+                    <option value="all">All status</option>
+                    <option value="active">Active</option>
+                    <option value="completed">Completed</option>
+                  </select>
                 </div>
-              </div>
 
-              {/* Collapsible filters (mobile) */}
-              <div className={`md:hidden ${isFiltersExpanded ? 'block' : 'hidden'} border-t border-gray-200 dark:border-gray-700`}>
-                <div className="p-4 space-y-4">
-                  {/* Status Filter */}
-                  <div className="relative">
-                    <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                    <select
-                      value={filterStatus}
-                      onChange={(e) => setFilterStatus(e.target.value as 'all' | 'active' | 'completed')}
-                      className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white transition-colors appearance-none"
-                    >
-                      <option value="all">All Status</option>
-                      <option value="active">Active</option>
-                      <option value="completed">Completed</option>
-                    </select>
-                  </div>
-
-                  {/* Priority Filter */}
-                  <div>
-                    <select
-                      value={filterPriority}
-                      onChange={(e) => setFilterPriority(e.target.value as 'all' | 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT')}
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white transition-colors appearance-none"
-                    >
-                      <option value="all">All Priorities</option>
-                      <option value="URGENT">Urgent Priority</option>
-                      <option value="HIGH">High Priority</option>
-                      <option value="MEDIUM">Medium Priority</option>
-                      <option value="LOW">Low Priority</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-
-              {/* Always visible filters (desktop) */}
-              <div className="hidden md:block p-4 border-t border-gray-200 dark:border-gray-700">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Status Filter */}
-                  <div className="relative">
-                    <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                    <select
-                      value={filterStatus}
-                      onChange={(e) => setFilterStatus(e.target.value as 'all' | 'active' | 'completed')}
-                      className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white transition-colors appearance-none"
-                    >
-                      <option value="all">All Status</option>
-                      <option value="active">Active</option>
-                      <option value="completed">Completed</option>
-                    </select>
-                  </div>
-
-                  {/* Priority Filter */}
-                  <div>
-                    <select
-                      value={filterPriority}
-                      onChange={(e) => setFilterPriority(e.target.value as 'all' | 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT')}
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white transition-colors appearance-none"
-                    >
-                      <option value="all">All Priorities</option>
-                      <option value="URGENT">Urgent Priority</option>
-                      <option value="HIGH">High Priority</option>
-                      <option value="MEDIUM">Medium Priority</option>
-                      <option value="LOW">Low Priority</option>
-                    </select>
-                  </div>
+                <div>
+                  <select
+                    value={filterPriority}
+                    onChange={(e) => setFilterPriority(e.target.value as 'all' | 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT')}
+                    className={selectBaseClasses}
+                  >
+                    <option value="all">All priorities</option>
+                    <option value="URGENT">Urgent priority</option>
+                    <option value="HIGH">High priority</option>
+                    <option value="MEDIUM">Medium priority</option>
+                    <option value="LOW">Low priority</option>
+                  </select>
                 </div>
               </div>
             </div>
 
-            {/* Todos List */}
             {isLoading ? (
-              <div className="space-y-4">
-                {[...Array(3)].map((_, i) => (
-                  <div key={i} className="bg-white dark:bg-gray-800 rounded-xl p-6 animate-pulse">
-                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-2"></div>
-                    <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
+              <div className={cn('space-y-4', skeletonSpacing)}>
+                {Array.from({ length: 3 }).map((_, index) => (
+                  <div
+                    key={index}
+                    className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition dark:border-slate-700 dark:bg-slate-900"
+                  >
+                    <div className="h-4 w-3/4 rounded bg-slate-200 dark:bg-slate-700 animate-pulse" />
+                    <div className="mt-2 h-3 w-1/2 rounded bg-slate-200 dark:bg-slate-700 animate-pulse" />
                   </div>
                 ))}
               </div>
             ) : filteredTodos.length === 0 ? (
-              <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
-                <div className="bg-gray-100 dark:bg-gray-700 p-4 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-                  <Plus className="h-8 w-8 text-gray-400" />
+              <div className="rounded-2xl border border-dashed border-slate-300 bg-white px-4 py-12 text-center shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800">
+                  <Plus className="h-8 w-8 text-slate-400" />
                 </div>
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                  {searchTerm || filterStatus !== 'all' || filterPriority !== 'all'
+                <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+                  {hasActiveFilters || searchTerm
                     ? 'No todos match your filters'
                     : 'No todos yet'}
                 </h3>
-                <p className="text-gray-500 dark:text-gray-400 mb-4">
-                  {searchTerm || filterStatus !== 'all' || filterPriority !== 'all'
-                    ? 'Try adjusting your search or filters'
-                    : 'Get started by creating your first todo'}
+                <p className="mt-2 text-sm leading-relaxed text-slate-500 dark:text-slate-300">
+                  {hasActiveFilters || searchTerm
+                    ? 'Try adjusting your search or filter options.'
+                    : 'Create your first todo to get started.'}
                 </p>
-                {(!searchTerm && filterStatus === 'all' && filterPriority === 'all') && (
+                {!hasActiveFilters && !searchTerm && (
                   <button
+                    type="button"
                     onClick={() => setIsFormOpen(true)}
-                    className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors font-medium"
+                    className="mt-6 tap-target gap-2 rounded-lg bg-indigo-600 px-4 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-indigo-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900"
                   >
-                    Create Todo
+                    <Plus className="h-5 w-5" />
+                    <span>Create todo</span>
                   </button>
                 )}
               </div>
             ) : (
-              <DndContext
-                sensors={sensors}
-                collisionDetection={closestCenter}
-                onDragEnd={handleDragEnd}
-              >
-                <SortableContext
-                  items={filteredTodos.map(todo => todo.id)}
-                  strategy={verticalListSortingStrategy}
-                >
-                  <div className={isCompactView ? "space-y-1" : "space-y-4"}>
+              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                <SortableContext items={filteredTodos.map((todo) => todo.id)} strategy={verticalListSortingStrategy}>
+                  <div className={cn('flex flex-col', listSpacing)}>
                     {filteredTodos.map((todo) => (
                       <TodoItem
                         key={todo.id}
@@ -391,26 +394,21 @@ const Dashboard: React.FC = () => {
                 </SortableContext>
               </DndContext>
             )}
-          </div>
+          </section>
 
-          {/* AI Panel */}
-          <div className="lg:col-span-1">
-            <AIPanel
-              todos={todos}
-              onTodosUpdate={updateTodosFromAI}
-              onAddSuggestion={handleAddSuggestion}
-            />
-          </div>
+          <section id="ai-assistant" className="lg:sticky lg:top-24">
+            <AIPanel todos={todos} onTodosUpdate={updateTodosFromAI} onAddSuggestion={handleAddSuggestion} />
+          </section>
         </div>
-      </div>
+      </main>
 
-      {/* Todo Form Modal */}
       <TodoForm
         isOpen={isFormOpen}
         onClose={closeForm}
-        onSubmit={editingTodo 
-          ? (data) => handleUpdateTodo(data as UpdateTodoRequest)
-          : (data) => handleCreateTodo(data as CreateTodoRequest)
+        onSubmit={
+          editingTodo
+            ? (data) => handleUpdateTodo(data as UpdateTodoRequest)
+            : (data) => handleCreateTodo(data as CreateTodoRequest)
         }
         todo={editingTodo}
         isEditing={!!editingTodo}

@@ -1,17 +1,17 @@
 import React, { useState } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { 
-  Check, 
-  Edit, 
-  Trash2, 
-  Calendar, 
+import {
+  Check,
+  Edit,
+  Trash2,
+  Calendar,
   GripVertical,
   Clock,
-  AlertCircle 
+  AlertCircle,
 } from 'lucide-react';
 import type { Todo } from '../types';
-import { formatDate, getPriorityColor, isOverdue } from '../utils';
+import { cn, formatDate, getPriorityColor, isOverdue } from '../utils';
 
 interface TodoItemProps {
   todo: Todo;
@@ -21,12 +21,12 @@ interface TodoItemProps {
   compact?: boolean;
 }
 
-const TodoItem: React.FC<TodoItemProps> = ({ 
-  todo, 
-  onToggleComplete, 
-  onEdit, 
+const TodoItem: React.FC<TodoItemProps> = ({
+  todo,
+  onToggleComplete,
+  onEdit,
   onDelete,
-  compact = false
+  compact = false,
 }) => {
   const [isDeleting, setIsDeleting] = useState(false);
   const overdue = isOverdue(todo.dueDate) && !todo.completed;
@@ -49,99 +49,133 @@ const TodoItem: React.FC<TodoItemProps> = ({
     setIsDeleting(true);
     try {
       await onDelete(todo.id);
-    } catch (error) {
+    } catch {
       setIsDeleting(false);
     }
   };
 
+  const cardBase =
+    'rounded-2xl border border-slate-200 bg-white text-left shadow-sm transition-all duration-200 dark:border-slate-700 dark:bg-slate-900';
+  const dragHandleClasses = cn(
+    'tap-target shrink-0 rounded-lg border border-transparent text-slate-400 transition-colors',
+    'hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2',
+    'dark:text-slate-500 dark:hover:text-slate-200 dark:focus-visible:ring-offset-slate-900',
+    'cursor-grab active:cursor-grabbing'
+  );
+  const completeButtonClasses = cn(
+    'tap-target shrink-0 rounded-full border-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900',
+    todo.completed
+      ? 'border-green-500 bg-green-500 text-white'
+      : 'border-slate-300 bg-white text-transparent hover:border-green-500 dark:border-slate-600 dark:bg-slate-900'
+  );
+  const actionButtonClasses =
+    'tap-target shrink-0 rounded-lg border border-transparent text-slate-400 transition-colors hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:border-transparent dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-indigo-300 dark:focus-visible:ring-offset-slate-900 disabled:opacity-60';
+
+  const renderDueBadge = (iconSize: string) => (
+    <span
+      className={cn(
+        'inline-flex items-center gap-1',
+        overdue
+          ? 'text-red-600 dark:text-red-400'
+          : todo.completed
+          ? 'text-green-600 dark:text-green-400'
+          : 'text-slate-500 dark:text-slate-300'
+      )}
+    >
+      {overdue ? (
+        <AlertCircle className={iconSize} />
+      ) : todo.completed ? (
+        <Check className={iconSize} />
+      ) : (
+        <Calendar className={iconSize} />
+      )}
+      <span className="whitespace-nowrap">{formatDate(todo.dueDate)}</span>
+    </span>
+  );
+
   if (compact) {
-    // Compact view
     return (
       <div
         ref={setNodeRef}
         style={style}
-        className={`bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 px-3 py-2 transition-all duration-200 hover:shadow-md ${
-          isDragging ? 'opacity-50 scale-95' : ''
-        } ${todo.completed ? 'opacity-75' : ''}`}
+        className={cn(
+          cardBase,
+          'px-3 py-3',
+          isDragging && 'opacity-60',
+          todo.completed && 'opacity-75'
+        )}
       >
-        <div className="flex items-center gap-2">
-          {/* Drag Handle */}
-          <button
-            {...attributes}
-            {...listeners}
-            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-grab active:cursor-grabbing"
-          >
-            <GripVertical className="h-4 w-4" />
-          </button>
-
-          {/* Complete Checkbox */}
-          <button
-            onClick={() => onToggleComplete(todo.id)}
-            className={`flex-shrink-0 w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all ${
-              todo.completed
-                ? 'bg-green-500 border-green-500 text-white'
-                : 'border-gray-300 dark:border-gray-600 hover:border-green-500'
-            }`}
-          >
-            {todo.completed && <Check className="h-2.5 w-2.5" />}
-          </button>
-
-          {/* Title */}
-          <h3
-            className={`flex-1 text-sm font-medium text-gray-900 dark:text-white transition-all truncate ${
-              todo.completed ? 'line-through text-gray-500 dark:text-gray-400' : ''
-            }`}
-          >
-            {todo.title}
-          </h3>
-
-          {/* Priority Badge */}
-          <span
-            className={`px-2 py-0.5 rounded-full text-xs font-medium ${getPriorityColor(
-              todo.priority
-            )}`}
-          >
-            {todo.priority}
-          </span>
-
-          {/* Due Date */}
-          <div className={`flex items-center gap-1 text-xs ${
-            overdue 
-              ? 'text-red-600 dark:text-red-400' 
-              : todo.completed 
-              ? 'text-green-600 dark:text-green-400'
-              : 'text-gray-500 dark:text-gray-400'
-          }`}>
-            {overdue ? (
-              <AlertCircle className="h-3 w-3" />
-            ) : todo.completed ? (
-              <Check className="h-3 w-3" />
-            ) : (
-              <Calendar className="h-3 w-3" />
-            )}
-            <span>{formatDate(todo.dueDate)}</span>
+        <div className="flex w-full items-start gap-3">
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              {...attributes}
+              {...listeners}
+              className={dragHandleClasses}
+              aria-label="Reorder todo"
+            >
+              <GripVertical className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => onToggleComplete(todo.id)}
+              aria-pressed={todo.completed}
+              aria-label={todo.completed ? 'Mark todo as incomplete' : 'Mark todo as complete'}
+              className={completeButtonClasses}
+            >
+              {todo.completed && <Check className="h-4 w-4" />}
+            </button>
           </div>
 
-          {/* Actions */}
-          <div className="flex items-center gap-0.5">
+          <div className="min-w-0 flex-1 space-y-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <h3
+                className={cn(
+                  'text-sm font-semibold leading-snug text-slate-900 dark:text-white break-words',
+                  todo.completed && 'line-through text-slate-500 dark:text-slate-400'
+                )}
+              >
+                {todo.title}
+              </h3>
+              <span
+                className={cn(
+                  'rounded-full px-2 py-0.5 text-xs font-medium',
+                  getPriorityColor(todo.priority)
+                )}
+              >
+                {todo.priority}
+              </span>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs leading-relaxed">
+              {renderDueBadge('h-3.5 w-3.5')}
+              <span className="inline-flex items-center gap-1 text-slate-400 dark:text-slate-500">
+                <Clock className="h-3.5 w-3.5" />
+                <span className="whitespace-nowrap">{formatDate(todo.createdAt)}</span>
+              </span>
+            </div>
+          </div>
+
+          <div className="flex shrink-0 items-center gap-2">
             <button
+              type="button"
               onClick={() => onEdit(todo)}
-              className="p-1 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors rounded hover:bg-gray-100 dark:hover:bg-gray-700"
-              title="Edit todo"
+              className={actionButtonClasses}
+              aria-label="Edit todo"
             >
-              <Edit className="h-3 w-3" />
+              <Edit className="h-4 w-4" />
             </button>
-            
             <button
+              type="button"
               onClick={handleDelete}
               disabled={isDeleting}
-              className="p-1 text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors rounded hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50"
-              title="Delete todo"
+              className={actionButtonClasses}
+              aria-label="Delete todo"
             >
               {isDeleting ? (
-                <div className="animate-spin rounded-full h-3 w-3 border-b border-red-500"></div>
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-red-500 border-b-transparent" />
               ) : (
-                <Trash2 className="h-3 w-3" />
+                <Trash2 className="h-4 w-4" />
               )}
             </button>
           </div>
@@ -150,118 +184,97 @@ const TodoItem: React.FC<TodoItemProps> = ({
     );
   }
 
-  // Default detailed view
   return (
     <div
       ref={setNodeRef}
       style={style}
-      className={`bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 transition-all duration-200 hover:shadow-md ${
-        isDragging ? 'opacity-50 scale-95' : ''
-      } ${todo.completed ? 'opacity-75' : ''}`}
+      className={cn(
+        cardBase,
+        'p-4 sm:p-5',
+        isDragging && 'opacity-60',
+        todo.completed && 'opacity-75'
+      )}
     >
-      <div className="flex items-start gap-3">
-        {/* Drag Handle */}
-        <button
-          {...attributes}
-          {...listeners}
-          className="mt-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-grab active:cursor-grabbing"
-        >
-          <GripVertical className="h-5 w-5" />
-        </button>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:gap-5">
+        <div className="flex items-center gap-3 sm:flex-col sm:items-start sm:gap-2">
+          <button
+            type="button"
+            {...attributes}
+            {...listeners}
+            className={cn(dragHandleClasses, 'sm:mt-1')}
+            aria-label="Reorder todo"
+          >
+            <GripVertical className="h-5 w-5" />
+          </button>
+          <button
+            type="button"
+            onClick={() => onToggleComplete(todo.id)}
+            aria-pressed={todo.completed}
+            aria-label={todo.completed ? 'Mark todo as incomplete' : 'Mark todo as complete'}
+            className={cn(completeButtonClasses, 'sm:mt-1')}
+          >
+            {todo.completed && <Check className="h-4 w-4" />}
+          </button>
+        </div>
 
-        {/* Complete Checkbox */}
-        <button
-          onClick={() => onToggleComplete(todo.id)}
-          className={`mt-1 flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
-            todo.completed
-              ? 'bg-green-500 border-green-500 text-white'
-              : 'border-gray-300 dark:border-gray-600 hover:border-green-500'
-          }`}
-        >
-          {todo.completed && <Check className="h-3 w-3" />}
-        </button>
-
-        {/* Content */}
-        <div className="flex-1 min-w-0">
-          {/* Title and Priority */}
-          <div className="flex items-start justify-between gap-2 mb-2">
+        <div className="min-w-0 flex-1 space-y-3">
+          <div className="flex flex-wrap items-start justify-between gap-3">
             <h3
-              className={`font-medium text-gray-900 dark:text-white transition-all ${
-                todo.completed ? 'line-through text-gray-500 dark:text-gray-400' : ''
-              }`}
+              className={cn(
+                'text-base font-semibold leading-snug text-slate-900 dark:text-white break-words',
+                todo.completed && 'line-through text-slate-500 dark:text-slate-400'
+              )}
             >
               {todo.title}
             </h3>
-            
-            {/* Priority Badge */}
             <span
-              className={`px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(
-                todo.priority
-              )}`}
+              className={cn(
+                'rounded-full px-3 py-1 text-xs font-medium',
+                getPriorityColor(todo.priority)
+              )}
             >
               {todo.priority}
             </span>
           </div>
 
-          {/* Description */}
           {todo.description && (
             <p
-              className={`text-sm text-gray-600 dark:text-gray-400 mb-3 ${
-                todo.completed ? 'line-through' : ''
-              }`}
+              className={cn(
+                'text-sm leading-relaxed text-slate-600 dark:text-slate-300 break-words',
+                todo.completed && 'line-through'
+              )}
             >
               {todo.description}
             </p>
           )}
 
-          {/* Due Date and Status */}
-          <div className="flex items-center gap-4 text-sm">
-            <div className={`flex items-center gap-1 ${
-              overdue 
-                ? 'text-red-600 dark:text-red-400' 
-                : todo.completed 
-                ? 'text-green-600 dark:text-green-400'
-                : 'text-gray-500 dark:text-gray-400'
-            }`}>
-              {overdue ? (
-                <AlertCircle className="h-4 w-4" />
-              ) : todo.completed ? (
-                <Check className="h-4 w-4" />
-              ) : (
-                <Calendar className="h-4 w-4" />
-              )}
-              <span>
-                {overdue && !todo.completed ? 'Overdue: ' : ''}
-                {formatDate(todo.dueDate)}
-              </span>
-            </div>
-
-            {/* Created timestamp */}
-            <div className="flex items-center gap-1 text-gray-400 dark:text-gray-500">
+          <div className="flex flex-wrap items-center gap-4 text-sm leading-relaxed">
+            {renderDueBadge('h-4 w-4')}
+            <span className="inline-flex items-center gap-2 text-slate-400 dark:text-slate-500">
               <Clock className="h-4 w-4" />
               <span>{formatDate(todo.createdAt)}</span>
-            </div>
+            </span>
           </div>
         </div>
 
-        {/* Actions */}
-        <div className="flex items-center gap-1 ml-2">
+        <div className="flex shrink-0 items-center gap-2">
           <button
+            type="button"
             onClick={() => onEdit(todo)}
-            className="p-2 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
-            title="Edit todo"
+            className={actionButtonClasses}
+            aria-label="Edit todo"
           >
             <Edit className="h-4 w-4" />
           </button>
-          
           <button
+            type="button"
             onClick={handleDelete}
             disabled={isDeleting}
-            className="p-2 text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50"
-            title="Delete todo"
+            className={actionButtonClasses}
+            aria-label="Delete todo"
           >
             {isDeleting ? (
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-500"></div>
+              <span className="h-4 w-4 animate-spin rounded-full border-2 border-red-500 border-b-transparent" />
             ) : (
               <Trash2 className="h-4 w-4" />
             )}
