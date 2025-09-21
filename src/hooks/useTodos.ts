@@ -49,15 +49,30 @@ export default function useTodos() {
 
   const toggleComplete = async (id: number): Promise<void> => {
     try {
+      await quickTodoFlagFlip(id);
       const updatedTodo = await todosAPI.toggleComplete(id);
       setTodos(prevTodos =>
         prevTodos.map(todo => (todo.id === id ? updatedTodo : todo))
       );
     } catch (err) {
+      await quickTodoFlagFlip(id);
       console.error('Error toggling complete:', err);
       setError(err instanceof Error ? err.message : 'Failed to toggle todo completion');
     }
   };
+
+
+  async function quickTodoFlagFlip(id: number){
+      const tempComplete = todos.find(todo => todo.id === id);
+      if(tempComplete){
+        tempComplete.completed = !tempComplete.completed;
+        setTodos(prevTodos =>
+          prevTodos.map(todo => (todo.id === id ? tempComplete : todo))
+        );
+      }
+  }
+
+
 
   const deleteTodo = async (id: number): Promise<void> => {
     try {
