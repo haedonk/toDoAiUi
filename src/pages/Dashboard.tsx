@@ -42,7 +42,6 @@ const Dashboard: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'completed'>('all');
   const [filterPriority, setFilterPriority] = useState<'all' | 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT'>('all');
-  const [isCompactView, setIsCompactView] = useState(false);
   const [darkMode, setDarkMode] = useState(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('darkMode') === 'true';
