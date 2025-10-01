@@ -252,7 +252,7 @@ const Dashboard: React.FC = () => {
                 </div>
 
                 <div className="w-full md:w-auto">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-3 md:min-w-[320px]">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:min-w-[320px]">
                     {/* Status Filter */}
                     <div className="relative">
                       <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
